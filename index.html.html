@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieDiary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e1117;
+  --surface: #161b22;
+  --surface2: #1e2530;
+  --green: #00c853;
+  --green-dim: #00c85322;
+  --amber: #ffb300;
+  --text: #e8eaf0;
+  --muted: #8b949e;
+  --border: #30363d;
+  --radius: 10px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  background: rgba(14,17,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--green);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.search-wrap {
+  flex: 1; min-width: 120px; max-width: 360px;
+  position: relative;
+}
+
+.search-wrap svg {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
+
+#search {
+  width: 100%; padding: 9px 12px 9px 36px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: inherit; font-size: 14px;
+  outline: none; transition: border-color .2s;
+}
+#search:focus { border-color: var(--green); }
+#search::placeholder { color: var(--muted); }
+
+/* Hamburger */
+.hamburger {
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; cursor: pointer; padding: 4px; margin-left: auto;
+}
+.hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--muted); border-radius: 2px;
+  transition: all .2s;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+.nav-tabs {
+  display: flex; gap: 4px;
+}
+
+.tab-btn {
+  padding: 7px 14px; border-radius: 6px; border: none;
+  background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s;
+}
+.tab-btn.active, .tab-btn:hover {
+  background: var(--surface2); color: var(--text);
+}
+.tab-btn.active { color: var(--green); }
+
+/* ── Bottom nav (mobile) ── */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(14,17,23,0.97);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.bottom-nav-inner {
+  display: flex;
+}
+.bottom-tab {
+  flex: 1; padding: 12px 4px 10px;
+  background: none; border: none; color: var(--muted);
+  font-family: inherit; font-size: 10px; font-weight: 500;
+  cursor: pointer; text-align: center; transition: color .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.bottom-tab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.bottom-tab.active { color: var(--green); }
+
+/* ── Hero ── */
+.hero {
+  text-align: center; padding: 36px 20px 28px;
+  border-bottom: 1px solid var(--border);
+}
+.hero h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 400;
+  margin-bottom: 8px; letter-spacing: -0.5px;
+}
+.hero p { color: var(--muted); font-size: 14px; }
+
+/* ── Movie Grid ── */
+#movies-section { padding: 16px; }
+
+.section-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding: 0 4px;
+}
+.section-head h3 { font-size: 13px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.count-badge {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2px 9px;
+  font-size: 12px; color: var(--muted);
+}
+
+#movies {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.movie-card {
+  position: relative; cursor: pointer;
+  border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: transform .2s, border-color .2s;
+}
+.movie-card:hover { transform: translateY(-4px); border-color: var(--muted); }
+
+.movie-card img {
+  width: 100%; display: block;
+  aspect-ratio: 2/3; object-fit: cover;
+}
+
+.card-body { padding: 10px 10px 12px; }
+.card-title { font-size: 13px; font-weight: 500; line-height: 1.3; margin-bottom: 6px; }
+.card-year { font-size: 11px; color: var(--muted); }
+
+.card-actions {
+  display: flex; gap: 6px; padding: 0 10px 10px;
+}
+
+.btn-sm {
+  flex: 1; padding: 6px 4px; border: 1px solid var(--border);
+  border-radius: 6px; background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.btn-sm:hover { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+.btn-sm.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+
+.card-rating {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  border-radius: 4px; padding: 2px 6px;
+  font-size: 11px; font-weight: 600; color: var(--amber);
+  display: none;
+}
+.card-rating.visible { display: block; }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+  justify-content: center; align-items: flex-end;
+  padding: 0;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px 14px 0 0; width: 100%;
+  max-height: 92vh; overflow-y: auto;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
+
+.modal-poster-row {
+  display: flex; gap: 18px; padding: 20px 20px 0;
+}
+.modal-poster {
+  width: 100px; flex-shrink: 0; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.modal-poster img { width: 100%; display: block; }
+.modal-info { flex: 1; padding-top: 4px; }
+.modal-info h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 400; line-height: 1.2; margin-bottom: 6px; }
+.modal-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.modal-overview { font-size: 13px; line-height: 1.6; color: #c9d1d9; }
+
+.modal-divider { height: 1px; background: var(--border); margin: 18px 20px; }
+
+.modal-review-form { padding: 0 20px 20px; }
+.modal-review-form h3 { font-size: 13px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+.star-picker { display: flex; gap: 4px; margin-bottom: 14px; }
+.star-picker span {
+  font-size: 28px; cursor: pointer; opacity: 0.3;
+  transition: opacity .1s, transform .1s;
+  user-select: none;
+}
+.star-picker span.lit { opacity: 1; }
+.star-picker span:hover { transform: scale(1.15); }
+
+#modal-review-text {
+  width: 100%; padding: 10px 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: inherit; font-size: 14px;
+  resize: vertical; min-height: 90px; outline: none;
+  transition: border-color .2s;
+}
+#modal-review-text:focus { border-color: var(--green); }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 12px; justify-content: flex-end; }
+.btn-ghost {
+  padding: 8px 16px; border-radius: 7px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: inherit; font-size: 13px;
+  cursor: pointer; transition: all .15s;
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-primary {
+  padding: 8px 20px; border-radius: 7px; border: none;
+  background: var(--green); color: #000;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.modal-close {
+  float: right; margin: 14px 16px 0 0;
+  background: none; border: none; color: var(--muted);
+  font-size: 22px; cursor: pointer; line-height: 1;
+  transition: color .15s;
+}
+.modal-close:hover { color: var(--text); }
+
+/* ── Reviews Section ── */
+#reviews-section { padding: 16px; max-width: 680px; margin: 0 auto; }
+
+.review-card {
+  display: flex; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 12px; position: relative;
+}
+.review-thumb {
+  width: 56px; flex-shrink: 0; border-radius: 6px; overflow: hidden;
+  border: 1px solid var(--border); align-self: flex-start;
+}
+.review-thumb img { width: 100%; display: block; }
+.review-thumb.placeholder {
+  height: 84px; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.review-body { flex: 1; min-width: 0; }
+.review-title { font-weight: 500; margin-bottom: 4px; }
+.review-stars { color: var(--amber); font-size: 13px; margin-bottom: 6px; }
+.review-text { font-size: 13px; color: #c9d1d9; line-height: 1.5; }
+.review-date { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.review-delete {
+  position: absolute; top: 12px; right: 12px;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 16px; padding: 2px 6px;
+  border-radius: 4px; transition: all .15s;
+}
+.review-delete:hover { background: #ff000022; color: #f87171; }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* ── Watchlist Section ── */
+#watchlist-section { padding: 16px; }
+#watchlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+/* ── Tabs ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Mobile padding for bottom nav ── */
+@media (max-width: 600px) {
+  body { padding-bottom: 64px; }
+
+  header { padding: 10px 14px; gap: 10px; }
+  .logo { font-size: 18px; }
+  .nav-tabs { display: none; }
+  .hamburger { display: flex; }
+  .bottom-nav { display: block; }
+
+  .search-wrap { max-width: 100%; order: 3; flex-basis: 100%; margin: 0; }
+
+  .hero { padding: 24px 16px 20px; }
+  .hero h2 { font-size: 22px; }
+
+  #movies-section, #watchlist-section { padding: 12px; }
+  #reviews-section { padding: 12px; }
+
+  #movies, #watchlist {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .modal-poster-row { flex-direction: column; align-items: center; text-align: center; padding: 16px 16px 0; }
+  .modal-poster { width: 120px; }
+  .modal-review-form { padding: 0 16px 80px; }
+  .modal-divider { margin: 14px 16px; }
+
+  .modal-actions { flex-direction: column; }
+  .btn-ghost, .btn-primary { width: 100%; text-align: center; padding: 12px; }
+
+  .review-card { padding: 12px; }
+  .review-thumb { width: 48px; }
+
+  /* pull-indicator for bottom sheet */
+  .modal::before {
+    content: ''; display: block;
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--border); margin: 10px auto 0;
+  }
+}
+
+@media (min-width: 601px) {
+  .modal-overlay { align-items: center; padding: 20px; }
+  .modal { border-radius: 14px; max-width: 560px; }
+}
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 20px;
+  font-size: 14px; color: var(--text);
+  transition: transform .3s ease; z-index: 999;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎬 MovieDiary</div>
+  <div class="search-wrap">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="search" placeholder="Search films…" autocomplete="off">
+  </div>
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-view="discover">Discover</button>
+    <button class="tab-btn" data-view="reviews">Reviews</button>
+    <button class="tab-btn" data-view="watchlist">Watchlist</button>
+  </nav>
+</header>
+
+<!-- Discover View -->
+<div id="view-discover" class="view active">
+  <div class="hero">
+    <h2>Your personal film journal</h2>
+    <p>Discover films, write reviews, build your watchlist</p>
+  </div>
+  <div id="movies-section">
+    <div class="section-head">
+      <h3 id="grid-label">Popular</h3>
+      <span class="count-badge" id="movie-count">0 films</span>
+    </div>
+    <div id="movies"></div>
+  </div>
+</div>
+
+<!-- Reviews View -->
+<div id="view-reviews" class="view">
+  <div id="reviews-section">
+    <div class="section-head" style="padding:0;">
+      <h3>My Reviews</h3>
+      <span class="count-badge" id="review-count">0</span>
+    </div>
+    <div id="reviews"></div>
+  </div>
+</div>
+
+<!-- Watchlist View -->
+<div id="view-watchlist" class="view">
+  <div id="watchlist-section">
+    <div class="section-head">
+      <h3>Watchlist</h3>
+      <span class="count-badge" id="watchlist-count">0</span>
+    </div>
+    <div id="watchlist"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="closeModal">×</button>
+    <div class="modal-poster-row">
+      <div class="modal-poster"><img id="modal-img" src="" alt=""></div>
+      <div class="modal-info">
+        <h2 id="modal-title"></h2>
+        <div class="modal-meta" id="modal-meta"></div>
+        <p class="modal-overview" id="modal-overview"></p>
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-review-form">
+      <h3>Your review</h3>
+      <div class="star-picker" id="starPicker">
+        <span data-star="1">★</span>
+        <span data-star="2">★</span>
+        <span data-star="3">★</span>
+        <span data-star="4">★</span>
+        <span data-star="5">★</span>
+      </div>
+      <textarea id="modal-review-text" placeholder="What did you think?"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="closeModal2">Cancel</button>
+        <button class="btn-primary" id="saveReview">Save Review</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Mobile bottom nav -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-tab active" data-view="discover">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Discover
+    </button>
+    <button class="bottom-tab" data-view="reviews">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Reviews
+    </button>
+    <button class="bottom-tab" data-view="watchlist">
+      <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      Watchlist
+    </button>
+  </div>
+</nav>
+
+<script>
+const API_KEY = '912e202728fe12b9dbd65e5e16c9a5a8';
+const IMG = 'https://image.tmdb.org/t/p/w500';
+
+// ── State ──
+let currentMovieId = null;
+let currentRating = 0;
+let currentMovieData = {};
+
+function getReviews() { try { return JSON.parse(localStorage.getItem('md_reviews')) || []; } catch { return []; } }
+function saveReviews(r) { localStorage.setItem('md_reviews', JSON.stringify(r)); }
+function getWatchlist() { try { return JSON.parse(localStorage.getItem('md_watchlist')) || []; } catch { return []; } }
+function saveWatchlist(w) { localStorage.setItem('md_watchlist', JSON.stringify(w)); }
+function getRatings() { try { return JSON.parse(localStorage.getItem('md_ratings')) || {}; } catch { return {}; } }
+function saveRatings(r) { localStorage.setItem('md_ratings', JSON.stringify(r)); }
+
+// ── Toast ──
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── Tabs ──
+function switchView(viewName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewName));
+  document.querySelectorAll('.bottom-tab').forEach(b => b.classList.toggle('active', b.dataset.view === viewName));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + viewName).classList.add('active');
+  if (viewName === 'reviews') displayReviews();
+  if (viewName === 'watchlist') displayWatchlist();
+}
+
+document.querySelectorAll('.tab-btn, .bottom-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.view));
+});
+
+// ── Search ──
+let searchTimer;
+document.getElementById('search').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  searchTimer = setTimeout(() => q.length >= 2 ? searchMovies(q) : loadPopular(), 300);
+});
+
+// ── API ──
+async function apiFetch(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  return res.json();
+}
+
+async function loadPopular() {
+  document.getElementById('grid-label').textContent = 'Popular right now';
+  const data = await apiFetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`);
+  renderMovies(data.results);
+}
+
+async function searchMovies(query) {
+  document.getElementById('grid-label').textContent = `Results for "${query}"`;
+  const data = await apiFetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+  renderMovies(data.results);
+}
+
+function renderMovies(movies) {
+  const grid = document.getElementById('movies');
+  const watchlist = getWatchlist();
+  const ratings = getRatings();
+  const valid = movies.filter(m => m.poster_path);
+  document.getElementById('movie-count').textContent = valid.length + ' films';
+  grid.innerHTML = '';
+  valid.forEach(movie => {
+    const inWL = watchlist.some(w => w.id === movie.id);
+    const rating = ratings[movie.id];
+    const card = document.createElement('div');
+    card.className = 'movie-card';
+    card.innerHTML = `
+      <div class="card-rating ${rating ? 'visible' : ''}">★ ${rating || ''}</div>
+      <img src="${IMG + movie.poster_path}" alt="${escHtml(movie.title)}" loading="lazy">
+      <div class="card-body">
+        <div class="card-title">${escHtml(movie.title)}</div>
+        <div class="card-year">${(movie.release_date || '').slice(0, 4)}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm ${inWL ? 'active' : ''}" data-wl="${movie.id}">
+          ${inWL ? '✓ Listed' : '+ Watchlist'}
+        </button>
+        <button class="btn-sm" data-review="${movie.id}">Review</button>
+      </div>`;
+    card.querySelector('img').addEventListener('click', () => openModal(movie.id));
+    card.querySelector('[data-wl]').addEventListener('click', e => { e.stopPropagation(); toggleWatchlist(movie); });
+    card.querySelector('[data-review]').addEventListener('click', e => { e.stopPropagation(); openModal(movie.id); });
+    grid.appendChild(card);
+  });
+}
+
+// ── Modal ──
+async function openModal(id) {
+  currentMovieId = id;
+  currentRating = getRatings()[id] || 0;
+  const reviews = getReviews();
+  const existing = reviews.find(r => r.id === id);
+
+  const movie = await apiFetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`);
+  currentMovieData = { id: movie.id, title: movie.title, poster: movie.poster_path };
+
+  document.getElementById('modal-img').src = IMG + movie.poster_path;
+  document.getElementById('modal-title').textContent = movie.title;
+  document.getElementById('modal-meta').textContent = [
+    (movie.release_date || '').slice(0, 4),
+    movie.runtime ? movie.runtime + ' min' : '',
+    movie.genres?.map(g => g.name).join(', ')
+  ].filter(Boolean).join(' · ');
+  document.getElementById('modal-overview').textContent = movie.overview;
+  document.getElementById('modal-review-text').value = existing?.review || '';
+  updateStars(currentRating);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentMovieId = null; currentRating = 0;
+}
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('closeModal2').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// Stars
+function updateStars(n) {
+  document.querySelectorAll('#starPicker span').forEach((s, i) => {
+    s.classList.toggle('lit', i < n);
+  });
+}
+document.getElementById('starPicker').addEventListener('click', e => {
+  const star = e.target.closest('[data-star]');
+  if (!star) return;
+  currentRating = +star.dataset.star;
+  updateStars(currentRating);
+});
+document.getElementById('starPicker').addEventListener('mouseover', e => {
+  const star = e.target.closest('[data-star]');
+  if (star) updateStars(+star.dataset.star);
+});
+document.getElementById('starPicker').addEventListener('mouseleave', () => updateStars(currentRating));
+
+// Save Review
+document.getElementById('saveReview').addEventListener('click', () => {
+  if (!currentMovieId) return;
+  const text = document.getElementById('modal-review-text').value.trim();
+  if (!text && !currentRating) { toast('Add a rating or write a review first'); return; }
+
+  const ratings = getRatings();
+  if (currentRating) { ratings[currentMovieId] = currentRating; saveRatings(ratings); }
+
+  if (text) {
+    const reviews = getReviews().filter(r => r.id !== currentMovieId);
+    reviews.unshift({
+      id: currentMovieId,
+      title: currentMovieData.title,
+      poster: currentMovieData.poster,
+      review: text,
+      rating: currentRating,
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    });
+    saveReviews(reviews);
+  }
+
+  toast('Review saved ✓');
+  closeModal();
+  loadPopular();
+});
+
+// ── Watchlist ──
+function toggleWatchlist(movie) {
+  let wl = getWatchlist();
+  const idx = wl.findIndex(w => w.id === movie.id);
+  if (idx >= 0) { wl.splice(idx, 1); toast('Removed from watchlist'); }
+  else { wl.push({ id: movie.id, title: movie.title, poster: movie.poster_path, year: (movie.release_date || '').slice(0, 4) }); toast('Added to watchlist ✓'); }
+  saveWatchlist(wl);
+  loadPopular();
+}
+
+function displayWatchlist() {
+  const wl = getWatchlist();
+  const grid = document.getElementById('watchlist');
+  document.getElementById('watchlist-count').textContent = wl.length;
+  grid.innerHTML = '';
+  if (!wl.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Your watchlist is empty.<br>Add films from the Discover tab.</p></div>';
+    return;
+  }
+  wl.forEach(movie => {
+    const card = document.createElement('div');
+    card.className = 'movie-card';
+    card.innerHTML = `
+      <img src="${IMG + movie.poster}" alt="${escHtml(movie.title)}" loading="lazy" style="cursor:default">
+      <div class="card-body">
+        <div class="card-title">${escHtml(movie.title)}</div>
+        <div class="card-year">${movie.year}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm active" data-remove="${movie.id}">✓ Listed</button>
+      </div>`;
+    card.querySelector('[data-remove]').addEventListener('click', () => {
+      let wl2 = getWatchlist().filter(w => w.id !== movie.id);
+      saveWatchlist(wl2); toast('Removed from watchlist'); displayWatchlist();
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ── Reviews ──
+function displayReviews() {
+  const reviews = getReviews();
+  const div = document.getElementById('reviews');
+  document.getElementById('review-count').textContent = reviews.length;
+  div.innerHTML = '';
+  if (!reviews.length) {
+    div.innerHTML = '<div class="empty-state"><div class="icon">🎬</div><p>No reviews yet.<br>Watch something and tell us what you thought!</p></div>';
+    return;
+  }
+  reviews.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'review-card';
+    card.innerHTML = `
+      <div class="review-thumb ${r.poster ? '' : 'placeholder'}">
+        ${r.poster ? `<img src="${IMG + r.poster}" alt="">` : '🎬'}
+      </div>
+      <div class="review-body">
+        <div class="review-title">${escHtml(r.title)}</div>
+        ${r.rating ? `<div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>` : ''}
+        <div class="review-text">${escHtml(r.review)}</div>
+        ${r.date ? `<div class="review-date">${r.date}</div>` : ''}
+      </div>
+      <button class="review-delete" data-idx="${i}" title="Delete review">✕</button>`;
+    card.querySelector('.review-delete').addEventListener('click', () => {
+      const all = getReviews(); all.splice(i, 1); saveReviews(all); toast('Review deleted'); displayReviews();
+    });
+    div.appendChild(card);
+  });
+}
+
+// ── Utility ──
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──
+loadPopular();
+</script>
+</body>
+</html>
