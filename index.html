@@ -533,13 +533,13 @@ async function apiFetch(url) {
 
 async function loadPopular() {
   document.getElementById('grid-label').textContent = 'Popular right now';
-  const data = await apiFetch(https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY});
+  const data = await apiFetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`);
   renderMovies(data.results);
 }
 
 async function searchMovies(query) {
-  document.getElementById('grid-label').textContent = Results for "${query}";
-  const data = await apiFetch(https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)});
+  document.getElementById('grid-label').textContent = `Results for "${query}"`;
+  const data = await apiFetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
   renderMovies(data.results);
 }
 
@@ -582,7 +582,7 @@ async function openModal(id) {
   const reviews = getReviews();
   const existing = reviews.find(r => r.id === id);
 
-  const movie = await apiFetch(https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY});
+  const movie = await apiFetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`);
   currentMovieData = { id: movie.id, title: movie.title, poster: movie.poster_path };
 
   document.getElementById('modal-img').src = IMG + movie.poster_path;
@@ -705,13 +705,13 @@ function displayReviews() {
     card.className = 'review-card';
     card.innerHTML = `
       <div class="review-thumb ${r.poster ? '' : 'placeholder'}">
-        ${r.poster ? <img src="${IMG + r.poster}" alt=""> : '🎬'}
+        ${r.poster ? `<img src="${IMG + r.poster}" alt="">` : '🎬'}
       </div>
       <div class="review-body">
         <div class="review-title">${escHtml(r.title)}</div>
-        ${r.rating ? <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div> : ''}
+        ${r.rating ? `<div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>` : ''}
         <div class="review-text">${escHtml(r.review)}</div>
-        ${r.date ? <div class="review-date">${r.date}</div> : ''}
+        ${r.date ? `<div class="review-date">${r.date}</div>` : ''}
       </div>
       <button class="review-delete" data-idx="${i}" title="Delete review">✕</button>`;
     card.querySelector('.review-delete').addEventListener('click', () => {
@@ -730,4 +730,4 @@ function escHtml(str) {
 loadPopular();
 </script>
 </body>
-</html
+</html>
